@@ -7,20 +7,6 @@ function getKlarnaAuth() {
 	return auth;
 }
 
-function formatProduct(product) {
-	return {
-		type: 'physical',
-		reference: product.id,
-		name: product.title,
-		quantity: 1,
-		quantity_unit: 'pcs',
-		unit_price: parseInt(product.price) * 100,
-		tax_rate: 2500,
-		total_discount_amount: 0,
-		image_url: product.image
-	};
-}
-
 function formatAsOrderLines(currentCart) {
 	currentCart.forEach((item) => {
 		item.total_amount = item.quantity * item.unit_price;
@@ -29,14 +15,28 @@ function formatAsOrderLines(currentCart) {
 	return currentCart;
 }
 
+function formatProduct({ product, quantity }) {
+	return {
+		type: 'physical',
+		reference: product.id,
+		name: product.title,
+		quantity,
+		quantity_unit: 'pcs',
+		unit_price: parseInt(product.price) * 100,
+		tax_rate: 2500,
+		total_discount_amount: 0,
+		image_url: product.image
+	};
+}
+
 // 1. Add async createOrder function that returns Klarna response.json()
-async function createOrder(product) {
-	console.log(product);
-	const formattedProduct = formatProduct(product);
-	const order_lines = formatAsOrderLines([formattedProduct]);
+async function createOrder(products) {
+	const formattedProducts = products.map(formatProduct);
+	const order_lines = formatAsOrderLines(formattedProducts);
 
 	let order_amount = 0;
 	let order_tax_amount = 0;
+
 	order_lines.forEach((product) => {
 		order_amount += product.total_amount;
 		order_tax_amount += product.total_tax_amount;

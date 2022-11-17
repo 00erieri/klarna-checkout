@@ -1,18 +1,20 @@
 const app = require('../../loaders/express-handlebars');
 const { createOrder } = require('../../services/server/klarna');
-const { getItemById } = require('../../services/server/fakeStore');
+const { getCartById, getProductsFromCart } = require('../../services/server/fakeStore');
 
-app.get('/checkout/:product_id', async function (req, res, next) {
+app.get('/:cart_id', async function (req, res) {
 	try {
-		const product_id = req.params.product_id;
-		const product = await getItemById(product_id);
-		const products = [{ product, quantity: 1 }];
+		const { cart_id } = req.params;
+		const cart = await getCartById(cart_id);
+		const products = await getProductsFromCart(cart);
+
 		const klarnaJsonResponse = await createOrder(products);
 		const html_snippet = klarnaJsonResponse.html_snippet;
 		res.render('checkout', {
 			klarna_checkout: html_snippet
 		});
 	} catch (error) {
+		console.error(error);
 		res.send(error.message);
 	}
 });
